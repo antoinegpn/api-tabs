@@ -5,7 +5,7 @@ const app = express();
 
 //GET all songs
 app.use('/api/songs',(req, res) => {
-     db.all('SELECT ID, TITLE FROM songs', function (err, rows) {
+     db.all("SELECT s.ID, s.TITLE, a.TITLE AS 'artist', t.LIBELLE AS 'tuning' FROM songs s INNER JOIN artists a ON s.ARTIST_ID = A.ID INNER JOIN tunings t ON s.TUNING_ID = t.ID", function (err, rows) {
         console.log(rows)
         res.json(rows)
     })
@@ -14,7 +14,7 @@ app.use('/api/songs',(req, res) => {
 //GET one song (id)
 app.use('/api/song_by_id/:id',(req, res) => {
     let id = req.params.id;
-    db.all(`SELECT ID, TITLE FROM songs WHERE ID = ${id}`, function (err, rows) {
+    db.all(`SELECT s.ID, s.TITLE, a.TITLE AS 'artist', t.LIBELLE AS 'tuning' FROM songs s INNER JOIN artists a ON s.ARTIST_ID = A.ID INNER JOIN tunings t ON s.TUNING_ID = t.ID WHERE s.ID = ${id}`, function (err, rows) {
        res.json(rows)
    })
 });
@@ -22,25 +22,29 @@ app.use('/api/song_by_id/:id',(req, res) => {
 //SEARCH song by title
 app.use('/api/song_by_title/:title',(req, res) => {
     let title = req.params.title;
-    db.all(`SELECT ID, TITLE FROM songs WHERE TITLE LIKE '%${title}%'`, function (err, rows) {
+    db.all(`SELECT s.ID, s.TITLE, a.TITLE AS 'artist', t.LIBELLE AS 'tuning' FROM songs s INNER JOIN artists a ON s.ARTIST_ID = A.ID INNER JOIN tunings t ON s.TUNING_ID = t.ID WHERE s.TITLE LIKE '%${title}%'`, function (err, rows) {
        res.json(rows)
    })
 });
 
 //POST new song
-app.use('/api/add_song/:title',(req, res) => {
+app.use('/api/add_song/:title/:artist_id/:tuning_id',(req, res) => {
     let title = req.params.title;
-    db.run(`INSERT INTO songs (TITLE) VALUES (?)`, [title], function (err) {
+    let artist_id = req.params.artist_id;
+    let tuning_id = req.params.tuning_id;
+    db.run(`INSERT INTO songs (TITLE, ARTIST_ID, TUNING_ID) VALUES (?, ?, ?)`, [title, artist_id, tuning_id], function (err) {
         console.log(title)
        res.json({message: 'success'})
    })
 });
 
 //UPDATE one song 
-app.use('/api/update_song/:id/:title',(req, res) => {
+app.use('/api/update_song/:id/:title/:artist_id/:tuning_id',(req, res) => {
     let id = req.params.id;
     let title = req.params.title;
-    db.run(`UPDATE songs SET title = ? WHERE id = ?`, [title, id], function (err) {
+    let artist_id = req.params.artist_id;
+    let tuning_id = req.params.tuning_id;
+    db.run(`UPDATE songs SET title = ?, artist_id = ?, tuning_id = ? WHERE id = ?`, [title, artist_id, tuning_id, id], function (err) {
         console.log(title)
        res.json({message: 'success'})
    })
